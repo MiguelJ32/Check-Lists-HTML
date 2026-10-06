@@ -3,48 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador de Checklists - Tablet</title>
+    <title>Buscador de Checklists - Control de Planta</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
 <body class="bg-slate-100 font-sans p-4 min-h-screen">
 
-    <div class="max-w-4xl mx-auto space-y-4">
-        <!-- Encabezado y Buscador -->
+    <div class="max-w-5xl mx-auto space-y-4">
+        <!-- Buscador Superior con Botón de Administración -->
         <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200">
-            <h1 class="text-xl font-bold text-slate-800 mb-3">🔍 Buscador de Checklists</h1>
+            <div class="flex justify-between items-center mb-2">
+                <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    🔍 Buscador de Checklists
+                </h1>
+                <button onclick="solicitarAccesoAdmin()" title="Configuración de Administrador"
+                        class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition text-xl">
+                    ⚙️
+                </button>
+            </div>
             <input type="text" id="searchInput" oninput="debounceBuscar()" placeholder="Escriba SO, VCP, Máquina o No. Parte..." 
-                   class="w-full text-lg p-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:border-blue-600">
+                   class="w-full text-lg p-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:border-blue-600 transition">
         </div>
 
-        <!-- Contenedor Principal -->
+        <!-- Área Principal de Contenido -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- Columna de Coincidencias -->
-            <div class="md:col-span-2 bg-white p-4 rounded-xl shadow-md border border-slate-200 min-h-[400px]">
-                <h2 class="font-bold text-slate-700 mb-2">Seleccione un Número de Parte</h2>
-                <div id="resultsContainer" class="space-y-2 max-h-[500px] overflow-y-auto">
-                    <p class="text-slate-400 text-sm">Ingrese un término para comenzar la búsqueda.</p>
+            <!-- Columna de Resultados / Coincidencias -->
+            <div class="md:col-span-2 bg-white p-4 rounded-xl shadow-md border border-slate-200 flex flex-col min-h-[420px]">
+                <h2 class="font-bold text-slate-700 mb-3 border-b pb-2">Seleccione un Número de Parte</h2>
+                <div id="resultsContainer" class="space-y-2 overflow-y-auto max-h-[480px] pr-1">
+                    <p class="text-slate-400 text-sm">Ingrese un término en el buscador para consultar.</p>
                 </div>
             </div>
 
-            <!-- Panel de Control e Impresión -->
+            <!-- Panel Derecho: Proceso e Impresión -->
             <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200 flex flex-col justify-between">
                 <div class="space-y-4">
-                    <h2 class="font-bold text-slate-700 border-b pb-2">📋 Configuración de Impresión</h2>
+                    <h2 class="font-bold text-slate-700 border-b pb-2 flex items-center gap-2">
+                        📋 Proceso de Impresión
+                    </h2>
                     
+                    <!-- Selección de Impresora -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">IP / Host Servidor Local:</label>
-                        <input type="text" id="serverIp" value="http://localhost:5000" class="w-full p-2 text-sm border rounded">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">🖨️️ Impresora:</label>
+                        <select id="printerSelect" onchange="guardarImpresoraSeleccionada()" class="w-full p-2.5 text-sm border rounded-lg bg-slate-50 font-medium text-slate-800 border-slate-300 focus:outline-none focus:border-blue-500">
+                            <option value="">Cargando impresoras...</option>
+                        </select>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Impresora:</label>
-                        <select id="printerSelect" class="w-full p-2 text-sm border rounded bg-slate-50"></select>
+                    <!-- Selector de Color Dinámico (Oculto por defecto si B&N está forzado) -->
+                    <div id="containerColor" class="hidden">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">🎨 Modo de Color:</label>
+                        <select id="colorSelect" class="w-full p-2.5 text-sm border rounded-lg bg-slate-50 font-medium text-slate-800 border-slate-300 focus:outline-none focus:border-blue-500">
+                            <option value="false" selected>Blanco y Negro</option>
+                            <option value="true">Color</option>
+                        </select>
+                    </div>
+
+                    <!-- Terminal de Estado / Log -->
+                    <div class="bg-slate-900 text-slate-200 p-3 rounded-lg text-xs font-mono h-36 overflow-y-auto no-scrollbar space-y-1" id="logBox">
+                        <p class="text-slate-400">&gt; Esperando selección...</p>
                     </div>
                 </div>
 
                 <div class="pt-4">
                     <button id="btnPrint" onclick="enviarImpresion()" disabled 
-                            class="w-full py-4 bg-emerald-600 text-white font-bold text-lg rounded-xl shadow opacity-50 cursor-not-allowed">
+                            class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-lg rounded-xl shadow transition opacity-50 cursor-not-allowed">
                         🖨️ Mandar a Imprimir
                     </button>
                 </div>
@@ -53,115 +79,285 @@
     </div>
 
     <!-- Modal de Selección de Checklists -->
-    <div id="checklistModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-lg w-full p-6 space-y-4">
-            <h3 class="text-lg font-bold border-b pb-2" id="modalTitle">Seleccionar Checklists</h3>
-            <div id="modalList" class="space-y-2 max-h-60 overflow-y-auto"></div>
-            <div class="flex justify-end space-x-2 pt-2">
-                <button onclick="cerrarModal()" class="px-4 py-2 bg-slate-200 font-bold rounded">Cancelar</button>
-                <button onclick="confirmarSeleccion()" class="px-4 py-2 bg-emerald-600 text-white font-bold rounded">Confirmar</button>
+    <div id="checklistModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-40">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <h3 class="text-lg font-bold border-b pb-2 text-slate-800" id="modalTitle">Seleccionar Checklists</h3>
+            <div class="flex justify-between items-center text-xs text-slate-500">
+                <button onclick="marcarTodos(true)" class="text-blue-600 hover:underline font-semibold">Marcar Todos</button>
+                <button onclick="marcarTodos(false)" class="text-slate-600 hover:underline font-semibold">Desmarcar Todos</button>
+            </div>
+            <div id="modalList" class="space-y-2 max-h-60 overflow-y-auto pr-1 border rounded-lg p-2"></div>
+            <div class="flex justify-end space-x-2 pt-2 border-t">
+                <button onclick="cerrarModalChecklists()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-sm">Cancelar</button>
+                <button onclick="confirmarSeleccionChecklists()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm">✔ Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuración para el Administrador -->
+    <div id="adminModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+            <h3 class="text-lg font-bold border-b pb-2 text-slate-800 flex items-center gap-2">
+                ⚙️ Configuración del Sistema (Administrador)
+            </h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Dirección IP / Host Servidor Local:</label>
+                    <input type="text" id="adminServerIp" placeholder="http://10.168.123.144:5000" 
+                           class="w-full p-2.5 text-sm border rounded-lg border-slate-300 focus:outline-none focus:border-blue-600 font-mono">
+                    <span class="text-[11px] text-slate-400">Dirección de la PC donde se ejecuta ServidorChecklists.exe</span>
+                </div>
+
+                <div class="flex items-center justify-between p-3 bg-slate-50 border rounded-lg">
+                    <div>
+                        <p class="text-sm font-bold text-slate-700">Habilitar Opción de Color</p>
+                        <p class="text-xs text-slate-500">Permite a los operadores cambiar entre Color y B&N</p>
+                    </div>
+                    <input type="checkbox" id="adminAllowColor" class="h-6 w-6 text-blue-600 rounded cursor-pointer">
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-3 border-t">
+                <button onclick="cerrarAdminModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-sm">Cancelar</button>
+                <button onclick="guardarAjustesAdmin()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm">💾 Guardar Cambios</button>
             </div>
         </div>
     </div>
 
     <script>
-        let selectedPdfs = [];
-        let timer = null;
+        const ADMIN_PASSWORD = "Mike";
+        let pdfsSeleccionados = [];
+        let timerBusqueda = null;
 
-        function getApiUrl() {
-            return document.getElementById('serverIp').value.replace(/\/$/, "");
+        // Cargar preferencias guardadas en el navegador o usar valores por defecto
+        let config = {
+            serverIp: localStorage.getItem('cfg_serverIp') || 'http://10.168.123.144:5000',
+            allowColor: localStorage.getItem('cfg_allowColor') === 'true',
+            lastPrinter: localStorage.getItem('cfg_lastPrinter') || ''
+        };
+
+        function log(mensaje) {
+            const box = document.getElementById('logBox');
+            box.innerHTML += `<p>&gt; ${mensaje}</p>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function limpiarLog() {
+            document.getElementById('logBox').innerHTML = '';
+        }
+
+        function aplicarConfiguracionUI() {
+            const containerColor = document.getElementById('containerColor');
+            if (config.allowColor) {
+                containerColor.classList.remove('hidden');
+            } else {
+                containerColor.classList.add('hidden');
+                document.getElementById('colorSelect').value = "false";
+            }
         }
 
         async function cargarImpresoras() {
             try {
-                const res = await fetch(`${getApiUrl()}/api/impresoras`);
+                const res = await fetch(`${config.serverIp.replace(/\/$/, "")}/api/impresoras`);
+                if (!res.ok) throw new Error();
                 const impresoras = await res.json();
+                
                 const select = document.getElementById('printerSelect');
-                select.innerHTML = impresoras.map(p => `<option value="${p}">${p}</option>`).join('');
-            } catch (e) { console.error("Error al cargar impresoras", e); }
+                if (impresoras.length > 0) {
+                    select.innerHTML = impresoras.map(p => `<option value="${p}">${p}</option>`).join('');
+                    if (config.lastPrinter && impresoras.includes(config.lastPrinter)) {
+                        select.value = config.lastPrinter;
+                    }
+                } else {
+                    select.innerHTML = '<option value="">No hay impresoras disponibles</option>';
+                }
+            } catch (e) {
+                document.getElementById('printerSelect').innerHTML = '<option value="">Error al conectar con servidor</option>';
+            }
+        }
+
+        function guardarImpresoraSeleccionada() {
+            const val = document.getElementById('printerSelect').value;
+            if (val) {
+                config.lastPrinter = val;
+                localStorage.setItem('cfg_lastPrinter', val);
+            }
         }
 
         function debounceBuscar() {
-            clearTimeout(timer);
-            timer = setTimeout(ejecutarBusqueda, 300);
+            clearTimeout(timerBusqueda);
+            timerBusqueda = setTimeout(ejecutarBusqueda, 300);
         }
 
         async function ejecutarBusqueda() {
             const query = document.getElementById('searchInput').value.trim();
             const container = document.getElementById('resultsContainer');
-            if (!query) { container.innerHTML = ''; return; }
+            
+            if (!query) {
+                container.innerHTML = '<p class="text-slate-400 text-sm">Ingrese un término en el buscador para consultar.</p>';
+                return;
+            }
 
             try {
-                const res = await fetch(`${getApiUrl()}/api/buscar?q=${encodeURIComponent(query)}`);
+                const res = await fetch(`${config.serverIp.replace(/\/$/, "")}/api/buscar?q=${encodeURIComponent(query)}`);
                 const data = await res.json();
                 
                 if (data.length === 0) {
-                    container.innerHTML = '<p class="text-slate-400 text-sm">Sin coincidencias.</p>';
+                    container.innerHTML = '<p class="text-slate-400 text-sm">Sin coincidencias para la búsqueda.</p>';
                     return;
                 }
 
                 container.innerHTML = data.map(item => `
                     <div onclick="seleccionarNoParte('${item.no_parte}')" 
-                         class="p-3 border rounded-lg hover:bg-slate-50 cursor-pointer flex justify-between items-center transition">
-                        <span class="font-bold text-slate-800">${item.no_parte}</span>
-                        <span class="text-xs bg-slate-200 px-2 py-1 rounded">${item.so}</span>
-                        <span class="text-xs bg-slate-200 px-2 py-1 rounded">${item.vcp}</span>
-                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${item.maquina}</span>
+                         class="p-3 border border-slate-200 rounded-lg hover:border-blue-500 hover:bg-slate-50 cursor-pointer grid grid-cols-4 gap-2 items-center text-center transition font-semibold text-sm">
+                        <span class="text-slate-900 font-bold text-base">${item.no_parte}</span>
+                        <span class="text-slate-600">${item.so}</span>
+                        <span class="text-slate-600">${item.vcp}</span>
+                        <span class="text-blue-900 font-bold">${item.maquina}</span>
                     </div>
                 `).join('');
-            } catch (e) { container.innerHTML = '<p class="text-red-500 text-sm">Error de conexión con el servidor local.</p>'; }
+            } catch (e) {
+                container.innerHTML = '<p class="text-red-500 text-sm">❌ No se pudo conectar con el servidor local. Verifique la IP en ⚙️.</p>';
+            }
         }
 
         async function seleccionarNoParte(noParte) {
+            limpiarLog();
+            log(`🎯 No. Parte: '${noParte}'`);
+            
             try {
-                const res = await fetch(`${getApiUrl()}/api/checklists?no_parte=${encodeURIComponent(noParte)}`);
+                const res = await fetch(`${config.serverIp.replace(/\/$/, "")}/api/checklists?no_parte=${encodeURIComponent(noParte)}`);
                 const pdfs = await res.json();
                 
-                if(pdfs.length === 0) { alert("No se encontraron checklists para este número de parte."); return; }
+                if (pdfs.length === 0) {
+                    log("❌ No se encontraron checklists para este No. Parte.");
+                    return;
+                }
 
                 const modalList = document.getElementById('modalList');
-                modalList.innerHTML = pdfs.map((pdf, idx) => `
-                    <label class="flex items-center space-x-2 p-2 border rounded">
-                        <input type="checkbox" value="${pdf.ruta}" checked class="pdf-chk h-5 w-5">
-                        <span class="text-sm font-medium text-slate-700">${pdf.nombre}</span>
+                modalList.innerHTML = pdfs.map(pdf => `
+                    <label class="flex items-center space-x-3 p-2.5 hover:bg-slate-50 rounded-lg cursor-pointer border border-transparent hover:border-slate-200">
+                        <input type="checkbox" value="${pdf.ruta}" checked class="pdf-chk h-5 w-5 text-blue-600 rounded">
+                        <span class="text-sm font-medium text-slate-700 break-all">${pdf.nombre}</span>
                     </label>
                 `).join('');
 
+                document.getElementById('modalTitle').innerText = `Checklists - No. Parte: ${noParte}`;
                 document.getElementById('checklistModal').classList.remove('hidden');
                 document.getElementById('checklistModal').classList.add('flex');
-            } catch (e) { alert("Error al consultar checklists."); }
+            } catch (e) {
+                log("❌ Error al obtener archivos desde el servidor.");
+            }
         }
 
-        function cerrarModal() {
+        function marcarTodos(estado) {
+            document.querySelectorAll('.pdf-chk').forEach(c => c.checked = estado);
+        }
+
+        function cerrarModalChecklists() {
             document.getElementById('checklistModal').classList.add('hidden');
             document.getElementById('checklistModal').classList.remove('flex');
         }
 
-        function confirmarSeleccion() {
+        function confirmarSeleccionChecklists() {
             const chks = document.querySelectorAll('.pdf-chk:checked');
-            selectedPdfs = Array.from(chks).map(c => c.value);
-            cerrarModal();
+            pdfsSeleccionados = Array.from(chks).map(c => c.value);
+            cerrarModalChecklists();
 
             const btn = document.getElementById('btnPrint');
-            if (selectedPdfs.length > 0) {
+            if (pdfsSeleccionados.length > 0) {
+                log(`🎉 ${pdfsSeleccionados.length} checklist(s) listos.`);
+                log("✔ Presione el botón para enviar a la cola de impresión.");
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                log("⚠️ No se seleccionó ningún checklist.");
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
             }
         }
 
         async function enviarImpresion() {
             const printer = document.getElementById('printerSelect').value;
-            const res = await fetch(`${getApiUrl()}/api/imprimir`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ rutas: selectedPdfs, impresora: printer, color: false })
-            });
-            const data = await res.json();
-            if (data.success) { alert("¡Trabajos enviados a impresión correctamente!"); }
-            else { alert("Error al mandar a imprimir: " + data.error); }
+            const esColor = document.getElementById('colorSelect').value === "true";
+
+            if (!printer) {
+                log("❌ Seleccione una impresora válida.");
+                return;
+            }
+
+            try {
+                log(`🖨️ Enviando a: [${printer}]`);
+                log(`   • Documentos: ${pdfsSeleccionados.length}`);
+                log(`   • Modo: Dúplex inteligente | ${esColor ? "Color" : "Blanco y Negro"}`);
+
+                const res = await fetch(`${config.serverIp.replace(/\/$/, "")}/api/imprimir`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ rutas: pdfsSeleccionados, impresora: printer, color: esColor })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    log("✔ Documentos enviados correctamente a Windows.");
+                } else {
+                    log(`❌ Error al imprimir: ${data.error}`);
+                }
+            } catch (e) {
+                log("❌ Error de comunicación con el servidor de impresión.");
+            }
         }
 
-        window.onload = cargarImpresoras;
+        // --- Lógica del Panel de Administrador ---
+        function solicitarAccesoAdmin() {
+            const pass = prompt("Ingrese la contraseña de administrador:");
+            if (pass === ADMIN_PASSWORD) {
+                document.getElementById('adminServerIp').value = config.serverIp;
+                document.getElementById('adminAllowColor').checked = config.allowColor;
+                document.getElementById('adminModal').classList.remove('hidden');
+                document.getElementById('adminModal').classList.add('flex');
+            } else if (pass !== null) {
+                alert("❌ Contraseña incorrecta.");
+            }
+        }
+
+        function cerrarAdminModal() {
+            document.getElementById('adminModal').classList.add('hidden');
+            document.getElementById('adminModal').classList.remove('flex');
+        }
+
+        function guardarAjustesAdmin() {
+            const newIp = document.getElementById('adminServerIp').value.trim();
+            const newAllowColor = document.getElementById('adminAllowColor').checked;
+
+            if (newIp) {
+                config.serverIp = newIp;
+                config.allowColor = newAllowColor;
+
+                localStorage.setItem('cfg_serverIp', newIp);
+                localStorage.setItem('cfg_allowColor', newAllowColor);
+
+                aplicarConfiguracionUI();
+                cargarImpresoras();
+                cerrarAdminModal();
+
+                limpiarLog();
+                log("⚙️ Configuración de administrador actualizada.");
+            }
+        }
+
+        // Atajo secreto de teclado: Ctrl + Shift + C
+        window.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
+                solicitarAccesoAdmin();
+            }
+        });
+
+        window.onload = () => {
+            aplicarConfiguracionUI();
+            cargarImpresoras();
+        };
     </script>
 </body>
 </html>
