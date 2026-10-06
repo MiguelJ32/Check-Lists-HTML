@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscador de Checklists - Control de Planta</title>
+    
+    <!-- Ícono de la Pestaña del Navegador (Favicon) -->
+    <link rel="icon" type="image/x-icon" href="logo2.ico">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -13,12 +17,16 @@
 <body class="bg-slate-100 font-sans p-4 min-h-screen">
 
     <div class="max-w-5xl mx-auto space-y-4">
-        <!-- Buscador Superior con Botón de Administración -->
+        <!-- Buscador Superior con Logo y Botón de Administración -->
         <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200">
-            <div class="flex justify-between items-center mb-2">
-                <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                    🔍 Buscador de Checklists
-                </h1>
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-3">
+                    <!-- Logo Superior -->
+                    <img src="logo2.ico" alt="Logo" class="h-9 w-9 object-contain" onerror="this.style.display='none';">
+                    <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        🔍 Buscador de Checklists
+                    </h1>
+                </div>
                 <button onclick="solicitarAccesoAdmin()" title="Configuración de Administrador"
                         class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition text-xl">
                     ⚙️
@@ -78,7 +86,7 @@
         </div>
     </div>
 
-    <!-- Modal de Selección de Checklists con Vista Previa Interactiva -->
+    <!-- Modal de Selección de Checklists Ampliado con Vista Previa -->
     <div id="checklistModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-40">
         <div class="bg-white rounded-xl max-w-4xl w-full p-6 space-y-4 shadow-2xl">
             <h3 class="text-lg font-bold border-b pb-2 text-slate-800" id="modalTitle">Seleccionar Checklists</h3>
@@ -94,7 +102,7 @@
                 </div>
 
                 <!-- Columna Derecha: Panel de Vista Previa -->
-                <div class="bg-slate-50 border rounded-lg p-3 flex flex-col items-center justify-center min-h-[300px]">
+                <div class="bg-slate-50 border rounded-lg p-3 flex flex-col items-center justify-center min-h-[320px]">
                     <span class="text-xs font-bold text-slate-500 mb-2">👁 Vista Previa</span>
                     <div id="previewContainer" class="w-full h-72 flex items-center justify-center">
                         <p class="text-xs text-slate-400 text-center">Pase el cursor o toque un checklist<br>para previsualizarlo.</p>
