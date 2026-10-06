@@ -17,14 +17,19 @@
 <body class="bg-slate-100 font-sans p-4 min-h-screen">
 
     <div class="max-w-5xl mx-auto space-y-4">
-        <!-- Buscador Superior con Logo y Botón de Administración -->
+        <!-- Buscador Superior con Logo Rectangular y Botón de Administración -->
         <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200">
             <div class="flex justify-between items-center mb-3">
-                <div class="flex items-center gap-3">
-                    <!-- Logo Superior -->
-                    <img src="logo2.png" alt="Logo" class="h-9 w-9 object-contain" onerror="this.style.display='none';">
+                <div class="flex items-center gap-4">
+                    <!-- Logo Horizontal Alargado -->
+                    <img src="logo2.png" alt="Vibracoustic" 
+                         class="h-8 md:h-10 w-auto max-w-[180px] object-contain" 
+                         onerror="this.src='logo2.ico'; this.onerror=null;">
+                    
+                    <div class="h-6 w-[1px] bg-slate-300"></div> <!-- Línea divisora decorativa -->
+        
                     <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        🔍 Buscador de Checklists
+                        🔍 Checklists
                     </h1>
                 </div>
                 <button onclick="solicitarAccesoAdmin()" title="Configuración de Administrador"
@@ -32,10 +37,9 @@
                     ⚙️
                 </button>
             </div>
-            <input type="text" id="searchInput" oninput="debounceBuscar()" placeholder="Escriba SO, VCP, Máquina o No. Parte..." 
-                   class="w-full text-lg p-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:border-blue-600 transition">
-        </div>
-
+    <input type="text" id="searchInput" oninput="debounceBuscar()" placeholder="Escriba SO, VCP, Máquina o No. Parte..." 
+           class="w-full text-lg p-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:border-blue-600 transition">
+</div>
         <!-- Área Principal de Contenido -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Columna de Resultados / Coincidencias -->
@@ -50,7 +54,7 @@
             <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200 flex flex-col justify-between">
                 <div class="space-y-4">
                     <h2 class="font-bold text-slate-700 border-b pb-2 flex items-center gap-2">
-                        📋 Proceso de Impresión
+                        📋 Impresión
                     </h2>
                     
                     <!-- Selección de Impresora -->
@@ -63,7 +67,7 @@
 
                     <!-- Selector de Color Dinámico -->
                     <div id="containerColor" class="hidden">
-                        <label class="block text-xs font-bold text-slate-600 mb-1">🎨 Modo de Color:</label>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">🎨 Color:</label>
                         <select id="colorSelect" class="w-full p-2.5 text-sm border rounded-lg bg-slate-50 font-medium text-slate-800 border-slate-300 focus:outline-none focus:border-blue-500">
                             <option value="false" selected>Blanco y Negro</option>
                             <option value="true">Color</option>
