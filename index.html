@@ -47,13 +47,13 @@
                     
                     <!-- Selección de Impresora -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">🖨️️ Impresora:</label>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">🖨 Impresora:</label>
                         <select id="printerSelect" onchange="guardarImpresoraSeleccionada()" class="w-full p-2.5 text-sm border rounded-lg bg-slate-50 font-medium text-slate-800 border-slate-300 focus:outline-none focus:border-blue-500">
                             <option value="">Cargando impresoras...</option>
                         </select>
                     </div>
 
-                    <!-- Selector de Color Dinámico (Oculto por defecto si B&N está forzado) -->
+                    <!-- Selector de Color Dinámico -->
                     <div id="containerColor" class="hidden">
                         <label class="block text-xs font-bold text-slate-600 mb-1">🎨 Modo de Color:</label>
                         <select id="colorSelect" class="w-full p-2.5 text-sm border rounded-lg bg-slate-50 font-medium text-slate-800 border-slate-300 focus:outline-none focus:border-blue-500">
@@ -78,15 +78,30 @@
         </div>
     </div>
 
-    <!-- Modal de Selección de Checklists -->
+    <!-- Modal de Selección de Checklists con Vista Previa Interactiva -->
     <div id="checklistModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-40">
-        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+        <div class="bg-white rounded-xl max-w-4xl w-full p-6 space-y-4 shadow-2xl">
             <h3 class="text-lg font-bold border-b pb-2 text-slate-800" id="modalTitle">Seleccionar Checklists</h3>
-            <div class="flex justify-between items-center text-xs text-slate-500">
-                <button onclick="marcarTodos(true)" class="text-blue-600 hover:underline font-semibold">Marcar Todos</button>
-                <button onclick="marcarTodos(false)" class="text-slate-600 hover:underline font-semibold">Desmarcar Todos</button>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Columna Izquierda: Checkboxes -->
+                <div class="flex flex-col space-y-2">
+                    <div class="flex justify-between items-center text-xs text-slate-500">
+                        <button onclick="marcarTodos(true)" class="text-blue-600 hover:underline font-semibold">Marcar Todos</button>
+                        <button onclick="marcarTodos(false)" class="text-slate-600 hover:underline font-semibold">Desmarcar Todos</button>
+                    </div>
+                    <div id="modalList" class="space-y-2 max-h-80 overflow-y-auto pr-1 border rounded-lg p-2"></div>
+                </div>
+
+                <!-- Columna Derecha: Panel de Vista Previa -->
+                <div class="bg-slate-50 border rounded-lg p-3 flex flex-col items-center justify-center min-h-[300px]">
+                    <span class="text-xs font-bold text-slate-500 mb-2">👁 Vista Previa</span>
+                    <div id="previewContainer" class="w-full h-72 flex items-center justify-center">
+                        <p class="text-xs text-slate-400 text-center">Pase el cursor o toque un checklist<br>para previsualizarlo.</p>
+                    </div>
+                </div>
             </div>
-            <div id="modalList" class="space-y-2 max-h-60 overflow-y-auto pr-1 border rounded-lg p-2"></div>
+
             <div class="flex justify-end space-x-2 pt-2 border-t">
                 <button onclick="cerrarModalChecklists()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-sm">Cancelar</button>
                 <button onclick="confirmarSeleccionChecklists()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm">✔ Confirmar</button>
@@ -130,7 +145,6 @@
         let pdfsSeleccionados = [];
         let timerBusqueda = null;
 
-        // Cargar preferencias guardadas en el navegador o usar valores por defecto
         let config = {
             serverIp: localStorage.getItem('cfg_serverIp') || 'http://10.168.123.144:5000',
             allowColor: localStorage.getItem('cfg_allowColor') === 'true',
@@ -237,7 +251,9 @@
 
                 const modalList = document.getElementById('modalList');
                 modalList.innerHTML = pdfs.map(pdf => `
-                    <label class="flex items-center space-x-3 p-2.5 hover:bg-slate-50 rounded-lg cursor-pointer border border-transparent hover:border-slate-200">
+                    <label onmouseenter="cargarVistaPrevia('${encodeURIComponent(pdf.ruta)}')" 
+                           onclick="cargarVistaPrevia('${encodeURIComponent(pdf.ruta)}')"
+                           class="flex items-center space-x-3 p-2.5 hover:bg-slate-100 rounded-lg cursor-pointer border border-transparent hover:border-slate-200 transition">
                         <input type="checkbox" value="${pdf.ruta}" checked class="pdf-chk h-5 w-5 text-blue-600 rounded">
                         <span class="text-sm font-medium text-slate-700 break-all">${pdf.nombre}</span>
                     </label>
@@ -246,9 +262,20 @@
                 document.getElementById('modalTitle').innerText = `Checklists - No. Parte: ${noParte}`;
                 document.getElementById('checklistModal').classList.remove('hidden');
                 document.getElementById('checklistModal').classList.add('flex');
+
+                if (pdfs.length > 0) {
+                    cargarVistaPrevia(encodeURIComponent(pdfs[0].ruta));
+                }
             } catch (e) {
                 log("❌ Error al obtener archivos desde el servidor.");
             }
+        }
+
+        function cargarVistaPrevia(rutaPdfEncoded) {
+            const container = document.getElementById('previewContainer');
+            const previewUrl = `${config.serverIp.replace(/\/$/, "")}/api/preview?ruta=${rutaPdfEncoded}`;
+            
+            container.innerHTML = `<img src="${previewUrl}" class="max-h-full max-w-full rounded shadow border object-contain" alt="Vista previa" onerror="this.onerror=null; this.parentElement.innerHTML='<p class=\'text-xs text-red-400\'>Error al cargar vista previa</p>';">`;
         }
 
         function marcarTodos(estado) {
@@ -309,7 +336,6 @@
             }
         }
 
-        // --- Lógica del Panel de Administrador ---
         function solicitarAccesoAdmin() {
             const pass = prompt("Ingrese la contraseña de administrador:");
             if (pass === ADMIN_PASSWORD) {
@@ -347,7 +373,6 @@
             }
         }
 
-        // Atajo secreto de teclado: Ctrl + Shift + C
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
                 solicitarAccesoAdmin();
